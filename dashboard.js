@@ -331,6 +331,7 @@ function showTooltip(index) {
 function hideTooltip() {
   const tooltip = $("#chartTooltip");
   if (tooltip) tooltip.hidden = true;
+  state.tooltipIndex = null;
 }
 
 function renderTable() {
@@ -471,15 +472,26 @@ function bindControls() {
   $("#salesChart").addEventListener("click", (event) => {
     const chart = state.lastChart;
     if (!chart || chart.periods.length === 0) return;
+    event.stopPropagation();
     const rect = $("#salesChart").getBoundingClientRect();
     const viewBoxWidth = chart.width;
     const x = (event.clientX - rect.left) * (viewBoxWidth / rect.width);
     const ratio = (x - chart.bounds.left) / Math.max(chart.bounds.right - chart.bounds.left, 1);
     const index = Math.max(0, Math.min(chart.periods.length - 1, Math.round(ratio * (chart.periods.length - 1))));
+    if (state.tooltipIndex === index) {
+      hideTooltip();
+      return;
+    }
     state.activeIndex = state.startIndex + index;
     syncRangeInputs();
     renderAll();
     showTooltip(index);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".chart-tooltip")) return;
+    if (event.target.closest("#salesChart")) return;
+    hideTooltip();
   });
 }
 
