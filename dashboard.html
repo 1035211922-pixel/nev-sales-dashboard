@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>新能源车企销量时间序列</title>
+    <link rel="stylesheet" href="./dashboard.css?v=20260522-tooltip">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">NEV Sales Monitor</p>
+        <h1>新能源车企销量时间序列</h1>
+      </div>
+      <a class="source-link" href="./reports/seres_sales_latest.md">查看报告</a>
+    </header>
+
+    <main class="shell">
+      <section class="summary-grid" aria-label="核心指标">
+        <article class="metric">
+          <span>最新月份</span>
+          <strong id="latestPeriod">--</strong>
+        </article>
+        <article class="metric">
+          <span>选中序列销量</span>
+          <strong id="modelTotal">--</strong>
+        </article>
+        <article class="metric">
+          <span>估算销售均价</span>
+          <strong id="officialTotal">--</strong>
+        </article>
+        <article class="metric">
+          <span>当前领先</span>
+          <strong id="leaderModel">--</strong>
+        </article>
+      </section>
+
+      <section class="panel compare-panel">
+        <div class="compare-head">
+          <div>
+            <h2>对比选择</h2>
+            <span id="updatedAt">--</span>
+          </div>
+          <div class="compare-controls">
+            <fieldset class="field compact-field">
+              <legend>指标</legend>
+              <div class="segmented">
+                <button class="option-tab is-active" type="button" data-metric="sales">销量</button>
+                <button class="option-tab" type="button" data-metric="asp">估算均价</button>
+              </div>
+            </fieldset>
+            <fieldset class="field compact-field">
+              <legend>粒度</legend>
+              <div class="segmented">
+                <button class="scope-tab is-active" type="button" data-scope="brand">车企</button>
+                <button class="scope-tab" type="button" data-scope="model">车型</button>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+        <div class="bulk-toolbar">
+          <button class="bulk-btn" type="button" data-action="selectAll">全选</button>
+          <button class="bulk-btn" type="button" data-action="clearAll">清空</button>
+          <button class="bulk-btn" type="button" data-action="invert">反选</button>
+          <div id="brandQuickSelect" class="brand-quick"></div>
+        </div>
+        <div id="seriesPicker" class="series-picker"></div>
+      </section>
+
+      <section class="workspace">
+        <section class="panel chart-panel">
+          <div class="chart-head">
+            <div>
+              <h2 id="chartTitle">车企销量趋势</h2>
+              <p id="chartSubtitle">从 2024 年开始，支持单车企查看和多车企对比</p>
+            </div>
+            <div id="legend" class="legend"></div>
+          </div>
+          <div class="timeline-panel">
+            <div class="timeline-current">
+              <button id="playButton" type="button" aria-label="播放月份变化">▶</button>
+              <strong id="activePeriod">--</strong>
+            </div>
+            <label class="field">
+              <span>当前月份 <b id="currentMonthLabel">--</b></span>
+              <input id="periodRange" type="range" min="0" max="0" value="0">
+            </label>
+            <div class="range-pair">
+              <label class="field">
+                <span>起点 <b id="startMonthLabel">--</b></span>
+                <input id="startRange" type="range" min="0" max="0" value="0">
+              </label>
+              <label class="field">
+                <span>终点 <b id="endMonthLabel">--</b></span>
+                <input id="endRange" type="range" min="0" max="0" value="0">
+              </label>
+            </div>
+          </div>
+          <div class="chart-stage">
+            <svg id="salesChart" role="img" aria-label="销量图表"></svg>
+            <div id="chartTooltip" class="chart-tooltip" hidden></div>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-heading">
+          <h2>月份明细</h2>
+          <span id="sourceNote">--</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead id="salesHead"></thead>
+            <tbody id="salesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel source-panel">
+        <div class="panel-heading">
+          <h2>数据来源与校验</h2>
+          <a href="./reports/data_validation.md">查看校验报告</a>
+        </div>
+        <div class="source-grid">
+          <article>
+            <h3>销量来源</h3>
+            <p>主数据来自盖世汽车单车型销量页，脚本按车型 ID 抓取 2024-01 起的月度表格，并把 EV/BEV/REEV 版本聚合到基础车型。</p>
+            <p>车企总量取页面里的厂商品牌行；车型合计与车企总量可能因为统计范围不同而不完全一致。</p>
+          </article>
+          <article>
+            <h3>估算均价</h3>
+            <p>车型均价采用“车型指导价区间中位数”。车企均价按当月车型销量加权估算：</p>
+            <p class="formula">Σ(车型销量 × 指导价中位数) / Σ车型销量</p>
+            <p>它用于观察产品结构价格带变化，不代表真实成交价、开票价或财报 ASP。</p>
+          </article>
+          <article>
+            <h3>财报交叉校验</h3>
+            <p>已用上市公司 2024/2025 财报或业绩公告做年度节点校验。理想 2024、蔚来 2024、小鹏 2025、零跑 2025 与图表口径基本一致；小鹏 2024、零跑 2024 有小幅口径差。</p>
+            <p>赛力斯财报为全公司新能源汽车销量，图表更接近赛力斯/问界车型页口径，因此不强行视为错误。</p>
+          </article>
+        </div>
+        <div class="source-links">
+          <a href="https://m.gasgoo.com/qcxl/cxxl/2026/4/2051">盖世汽车车型销量页示例</a>
+          <a href="https://www.sec.gov/Archives/edgar/data/1791706/000110465925023764/tm259135d1_ex99-1.htm">理想 2024 业绩公告</a>
+          <a href="https://www.sec.gov/Archives/edgar/data/1810997/000119312525056220/d829413dex992.htm">小鹏 2024 业绩公告</a>
+          <a href="https://ir.nio.com/zh-hans/news-releases/news-release-details/nio-inc-reports-unaudited-fourth-quarter-and-full-year-2024">蔚来 2024 业绩公告</a>
+          <a href="https://www1.hkexnews.hk/listedco/listconews/sehk/2025/0429/2025042904102.pdf">零跑 2024 年报</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="./dashboard.js?v=20260522-tooltip"></script>
+  </body>
+</html>
